@@ -5,7 +5,7 @@ Rozwiązanie zadania z przedmiotu Zaawansowana analityka biznesowa – metody im
 ## Struktura repozytorium
 
 ```
-zab-zadanie1/
+ZABMID/
 ├── data/                        # zbiory danych
 │   └── ka01.csv                 # indywidualny zbiór grupy
 ├── notebooks/
