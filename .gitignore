@@ -1,0 +1,15 @@
+# środowiska
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# system
+.DS_Store
+Thumbs.db
+
+# dane wrażliwe / duże – odkomentuj, jeśli zbiór nie może trafić do repo
+# data/
