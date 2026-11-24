@@ -1,0 +1,252 @@
+
+====================================================================================================
+PUNKT 3 – ANCOVA przy założeniach MCAR / MAR oraz analiza wrażliwości MNAR
+====================================================================================================
+Plik danych: data\ka01.csv   |   SEED = 42   |   m = 100   |   α = 0.05
+Wymiary zbioru: 805 obserwacji; zmienne: y_t1, x1, trt, x2, y_t2
+
+Braki danych (zgodnie z pkt 1 – wyłącznie Y_T2):
+      n_braków      %
+y_t1         0   0.00
+x1           0   0.00
+trt          0   0.00
+x2           0   0.00
+y_t2       261  32.42
+
+Braki Y_T2 wg TRT:
+       n  braki  odsetek
+trt                     
+1    380    138   0.3632
+2    425    123   0.2894
+
+Model analityczny: chg ~ C(trt, Treatment(reference=2)) + y_t1,  chg = y_t2 − y_t1
+β1 = różnica średnich CHG (TRT=1 − TRT=2) skorygowana o Y_T1; H0: β1 = 0.
+
+====================================================================================================
+A. SCENARIUSZ MCAR – analiza pełnych przypadków (complete-case, OLS)
+====================================================================================================
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                    chg   R-squared:                       0.183
+Model:                            OLS   Adj. R-squared:                  0.180
+Method:                 Least Squares   F-statistic:                     60.48
+Date:                Tue, 24 Nov 2026   Prob (F-statistic):           1.97e-24
+Time:                        01:00:25   Log-Likelihood:                -1200.1
+No. Observations:                 544   AIC:                             2406.
+Df Residuals:                     541   BIC:                             2419.
+Df Model:                           2                                         
+Covariance Type:            nonrobust                                         
+=======================================================================================================
+                                          coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------------------
+Intercept                               2.7225      1.044      2.607      0.009       0.671       4.774
+C(trt, Treatment(reference=2))[T.1]     1.9559      0.190     10.288      0.000       1.582       2.329
+y_t1                                   -0.3898      0.096     -4.063      0.000      -0.578      -0.201
+==============================================================================
+Omnibus:                       15.542   Durbin-Watson:                   2.144
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               19.190
+Skew:                          -0.305   Prob(JB):                     6.81e-05
+Kurtosis:                       3.689   Cond. No.                         121.
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+N = 544,  R² = 0.1827
+
+Współczynniki ANCOVA (CC):
+                     Oszacowanie      SE        t     df  p-value  CI 2.5%  CI 97.5%
+β0 (wyraz wolny)          2.7225  1.0445   2.6066  541.0   0.0094   0.6708    4.7742
+β1 (TRT=1 vs TRT=2)       1.9559  0.1901  10.2876  541.0   0.0000   1.5824    2.3293
+β2 (Y_T1)                -0.3898  0.0959  -4.0631  541.0   0.0001  -0.5782   -0.2013
+
+Średnie CHG (surowe oraz LS-means przy Y_T1 = 10.8223, średnia z n = 544 obserwacji kompletnych):
+                     Oszacowanie      SE  CI 2.5%  CI 97.5%    n
+CHG surowa – TRT=1        0.4530  0.1318   0.1935    0.7126  242
+CHG surowa – TRT=2       -1.4898  0.1365  -1.7584   -1.2212  302
+LS-mean CHG – TRT=1       0.4603  0.1416   0.1820    0.7385  544
+LS-mean CHG – TRT=2      -1.4956  0.1268  -1.7447   -1.2465  544
+
+====================================================================================================
+B. SCENARIUSZ MAR – imputacja wielokrotna FCS/MICE (m = 100) + reguły Rubina
+====================================================================================================
+Model imputacyjny (osobno w warstwach TRT = 1 i TRT = 2, metoda 'norm' – bayesowska regresja liniowa):
+  y_t2 | TRT=g  ~  γ0g + γ1g·y_t1 + γ2g·x1 + γ3g·x2 + e,   e ~ N(0, σ²_g),   g ∈ {1, 2}
+  σ*² = SSR/χ²(n_g − 4),  γ* = γ̂ + σ*·chol((X'X)⁻¹)·z,  y_imp = Xγ* + σ*·ε
+  CHG liczone pasywnie po imputacji: chg = y_t2_imp − y_t1.
+
+Oszacowania modeli imputacyjnych (OLS na danych zaobserwowanych, punkt startowy losowania):
+
+  TRT=1: n_obs = 242, σ̂ = 2.0098, R² = 0.0744
+               γ̂      SE  p-value
+Intercept  4.3763  1.8949   0.0218
+y_t1       0.5365  0.1358   0.0001
+x1         0.0183  0.0239   0.4446
+x2         0.2848  0.2803   0.3107
+
+  TRT=2: n_obs = 302, σ̂ = 2.3578, R² = 0.0714
+               γ̂      SE  p-value
+Intercept  2.2651  1.9942   0.2569
+y_t1       0.6487  0.1358   0.0000
+x1         0.0009  0.0238   0.9691
+x2        -0.0270  0.2937   0.9267
+
+Współczynniki ANCOVA (MI, reguły Rubina; ν_com = n − 3 = 802):
+                     Oszacowanie      SE        t  df (ν_adj)  p-value  CI 2.5%  CI 97.5%       W       B       T     RIV       λ     FMI
+β0 (wyraz wolny)          2.8181  1.0469   2.6919    347.6592   0.0074   0.7591    4.8772  0.7448  0.3477  1.0960  0.4715  0.3204  0.3243
+β1 (TRT=1 vs TRT=2)       1.9594  0.1871  10.4741    361.4494   0.0000   1.5915    2.3273  0.0242  0.0107  0.0350  0.4456  0.3082  0.3120
+β2 (Y_T1)                -0.3977  0.0960  -4.1411    335.1658   0.0000  -0.5866   -0.2088  0.0062  0.0030  0.0092  0.4968  0.3319  0.3358
+
+N = 805 (wszystkie obserwacje),  R² (łączone, Fisher z) = 0.1900,  RMSE (średnie σ̂) = 2.2031
+
+Średnie CHG (surowe i LS-means), reguły Rubina:
+                     Oszacowanie      SE        t  df (ν_adj)  p-value  CI 2.5%  CI 97.5%       W       B       T     RIV       λ     FMI
+CHG surowa – TRT=1        0.4587  0.1294   3.5452    195.8260   0.0005   0.2035    0.7139  0.0112  0.0055  0.0167  0.5010  0.3338  0.3405
+CHG surowa – TRT=2       -1.5205  0.1390 -10.9368    228.6791   0.0000  -1.7945   -1.2466  0.0134  0.0059  0.0193  0.4433  0.3071  0.3131
+LS-mean CHG – TRT=1       0.4483  0.1356   3.3062    365.2876   0.0010   0.1816    0.7149  0.0128  0.0056  0.0184  0.4387  0.3049  0.3087
+LS-mean CHG – TRT=2      -1.5112  0.1316 -11.4821    326.1521   0.0000  -1.7701   -1.2522  0.0114  0.0058  0.0173  0.5162  0.3405  0.3445
+
+Weryfikacja krzyżowa: IterativeImputer(BayesianRidge, sample_posterior=True), warstwy TRT, m = 100:
+                     Oszacowanie      SE  df (ν_adj)  p-value  CI 2.5%  CI 97.5%     FMI
+β0 (wyraz wolny)          3.0753  1.0021    422.3331   0.0023   1.1055    5.0450  0.2629
+β1 (TRT=1 vs TRT=2)       1.9493  0.1774    461.2149   0.0000   1.6007    2.2978  0.2349
+β2 (Y_T1)                -0.4216  0.0918    409.4881   0.0000  -0.6020   -0.2413  0.2727
+
+====================================================================================================
+C. WERYFIKACJA POPRAWNOŚCI
+====================================================================================================
+  [OK] Brak NaN po imputacji (wszystkie m zbiorów)
+  [OK] Wartości zaobserwowane Y_T2 identyczne we wszystkich imputacjach
+  [OK] Imputacje różnią się między zbiorami (B > 0)
+  [OK] Szybka ANCOVA = statsmodels (β i Var(β))
+  [OK] MNAR: wartości zaobserwowane nietknięte po przesunięciu δ
+  [OK] MNAR: imputowane TRT=1 przesunięte dokładnie o δ1, TRT=2 o δ2
+
+====================================================================================================
+D. SCENARIUSZ MNAR – δ-adjustment (przesunięcie imputowanych Y_T2 w grupie TRT=1)
+====================================================================================================
+β1 (MAR) = 1.9594, p = 1.35e-22 → istotny; siatkę δ przesuwamy w kierunku ujemnym (w stronę utraty istotności).
+Y_T2_MNAR = Y_T2_MAR + δ wyłącznie dla 138 imputowanych obserwacji z TRT=1; zgrubna siatka co 0.5.
+
+Zgrubna siatka δ (rozszerzana automatycznie do zmiany decyzji + 2 punkty dalej):
+      δ      β1      SE  CI 2.5%  CI 97.5%  p-value     FMI               Decyzja (α=0.05)
+0   0.0  1.9594  0.1871   1.5915    2.3273   0.0000  0.3120                   odrzucamy H0
+1  -0.5  1.7777  0.1874   1.4092    2.1462   0.0000  0.3110                   odrzucamy H0
+2  -1.0  1.5960  0.1884   1.2255    1.9665   0.0000  0.3076                   odrzucamy H0
+3  -1.5  1.4143  0.1902   1.0403    1.7882   0.0000  0.3020                   odrzucamy H0
+4  -2.0  1.2325  0.1926   0.8538    1.6113   0.0000  0.2944                   odrzucamy H0
+5  -2.5  1.0508  0.1957   0.6660    1.4356   0.0000  0.2852                   odrzucamy H0
+6  -3.0  0.8691  0.1995   0.4769    1.2612   0.0000  0.2746                   odrzucamy H0
+7  -3.5  0.6874  0.2038   0.2867    1.0880   0.0008  0.2631                   odrzucamy H0
+8  -4.0  0.5056  0.2088   0.0954    0.9159   0.0158  0.2509                   odrzucamy H0
+9  -4.5  0.3239  0.2142  -0.0970    0.7449   0.1312  0.2384  brak podstaw do odrzucenia H0
+10 -5.0  0.1422  0.2201  -0.2904    0.5747   0.5186  0.2259  brak podstaw do odrzucenia H0
+11 -5.5 -0.0395  0.2265  -0.4846    0.4055   0.8615  0.2134  brak podstaw do odrzucenia H0
+
+Zagęszczona siatka w przedziale przejścia (krok = 0.05):
+       δ      β1      SE  CI 2.5%  CI 97.5%  p-value     FMI               Decyzja (α=0.05)
+0  -4.50  0.3239  0.2142  -0.0970    0.7449   0.1312  0.2384  brak podstaw do odrzucenia H0
+1  -4.45  0.3421  0.2136  -0.0777    0.7619   0.1100  0.2397  brak podstaw do odrzucenia H0
+2  -4.40  0.3603  0.2131  -0.0585    0.7790   0.0916  0.2410  brak podstaw do odrzucenia H0
+3  -4.35  0.3784  0.2125  -0.0392    0.7961   0.0756  0.2422  brak podstaw do odrzucenia H0
+4  -4.30  0.3966  0.2120  -0.0200    0.8132   0.0620  0.2435  brak podstaw do odrzucenia H0
+5  -4.25  0.4148  0.2114  -0.0007    0.8303   0.0504  0.2447  brak podstaw do odrzucenia H0
+6  -4.20  0.4330  0.2109   0.0185    0.8474   0.0406  0.2460                   odrzucamy H0
+7  -4.15  0.4511  0.2103   0.0377    0.8645   0.0325  0.2472                   odrzucamy H0
+8  -4.10  0.4693  0.2098   0.0570    0.8816   0.0258  0.2485                   odrzucamy H0
+9  -4.05  0.4875  0.2093   0.0762    0.8988   0.0203  0.2497                   odrzucamy H0
+10 -4.00  0.5056  0.2088   0.0954    0.9159   0.0158  0.2509                   odrzucamy H0
+
+>>> PUNKT KRYTYCZNY (Brent, p(δ*) = α): δ* = -4.2481
+    β1(δ*) = 0.4155, SE = 0.2114, 95% CI = [0.0000; 0.8309], p = 0.050000
+    β1(δ) = β1_MAR + c·δ,  c = 0.3634  →  δ dla β1 = 0: δ0 = -5.3912
+    Kontrola: p(δ* ∓ 0.001) = 0.04979 / 0.05021  (próg α = 0.05 przecięty: TAK)
+
+Skala punktu krytycznego (ocena realizmu scenariusza MNAR):
+                                                   wartość
+δ*                                                 -4.2481
+SD(Y_T2) obs., cała próba                           2.4829
+SD(Y_T2) obs., TRT=1                                2.0760
+SD(CHG) obs., cała próba                            2.4327
+SD(CHG) obs., TRT=1                                 2.0497
+RMSE ANCOVA (MAR)                                   2.2031
+δ* / SD(Y_T2)                                      -1.7110
+δ* / SD(Y_T2 | TRT=1)                              -2.0463
+δ* / SD(CHG)                                       -1.7463
+δ* / SD(CHG | TRT=1)                               -2.0726
+δ* / RMSE                                          -1.9282
+Śr. CHG zaobserwowana, TRT=1                        0.4530
+Śr. CHG imputowana (MAR), braki TRT=1               0.4688
+Śr. CHG imputowana przy δ*, braki TRT=1            -3.7794
+Śr. CHG zaobserwowana, TRT=2                       -1.4898
+Śr. CHG (MAR), TRT=2 – cała grupa                  -1.5205
+δ_ref: braki TRT=1 → średnia CHG grupy kontrolnej  -1.9893
+
+====================================================================================================
+E. MNAR – DWUWYMIAROWA ANALIZA PUNKTU KRYTYCZNEGO (δ1: braki TRT=1, δ2: braki TRT=2)
+====================================================================================================
+Siatka: δ1, δ2 ∈ [-7; 7], 121 × 121 = 14641 kombinacji, każda: m = 100 modeli ANCOVA + reguły Rubina.
+
+Krytyczne δ1*(δ2) – granica p = 0.05 dla wybranych przesunięć w grupie kontrolnej:
+   δ2 (TRT=2)  δ1* (TRT=1)
+0        -2.0      -5.7097
+1        -1.0      -4.9869
+2         0.0      -4.2481
+3         1.0      -3.4907
+4         2.0      -2.7124
+5         3.0      -1.9119
+
+Wybrane kombinacje (δ1, δ2):
+   δ1 (TRT=1)  δ2 (TRT=2)      β1      SE  CI 2.5%  CI 97.5%  p-value     FMI               Decyzja (α=0.05)
+0          -2           0  1.2325  0.1926   0.8538    1.6113   0.0000  0.2944                   odrzucamy H0
+1          -4           0  0.5056  0.2088   0.0954    0.9159   0.0158  0.2509                   odrzucamy H0
+2          -4           2 -0.0693  0.2140  -0.4899    0.3514   0.7463  0.2388  brak podstaw do odrzucenia H0
+3          -2           2  0.6576  0.1983   0.2677    1.0475   0.0010  0.2778                   odrzucamy H0
+4           0           2  1.3845  0.1929   1.0052    1.7638   0.0000  0.2935                   odrzucamy H0
+5           0           4  0.8096  0.2091   0.3986    1.2205   0.0001  0.2501                   odrzucamy H0
+6          -6           0 -0.2213  0.2333  -0.6796    0.2371   0.3434  0.2013  brak podstaw do odrzucenia H0
+7          -4          -2  1.0806  0.2136   0.6608    1.5004   0.0000  0.2397                   odrzucamy H0
+8           2           2  2.1114  0.1987   1.7208    2.5020   0.0000  0.2769                   odrzucamy H0
+9          -3           3  0.0067  0.2115  -0.4090    0.4224   0.9747  0.2444  brak podstaw do odrzucenia H0
+
+====================================================================================================
+F. TABELA PORÓWNAWCZA – MCAR (CC) vs MAR (MI) vs MNAR (δ*)
+====================================================================================================
+                      MCAR (CC)  MAR (MI, FCS norm)  MAR (MI, sklearn)
+N                      544.0000            805.0000           805.0000
+Śr. CHG surowa TRT=1     0.4530              0.4587             0.4458
+Śr. CHG surowa TRT=2    -1.4898             -1.5205            -1.5245
+LS-mean CHG TRT=1        0.4603              0.4483             0.4347
+LS-mean CHG TRT=2       -1.4956             -1.5112            -1.5145
+β1                       1.9559              1.9594             1.9493
+SE(β1)                   0.1901              0.1871             0.1774
+CI 2.5%                  1.5824              1.5915             1.6007
+CI 97.5%                 2.3293              2.3273             2.2978
+p-value                  0.0000              0.0000             0.0000
+β2 (Y_T1)               -0.3898             -0.3977            -0.4216
+R²                       0.1827              0.1900             0.1915
+RIV(β1)                     NaN              0.4456             0.3013
+FMI(β1)                     NaN              0.3120             0.2349
+
+====================================================================================================
+G. ZAPIS WYNIKÓW
+====================================================================================================
+  zapisano: results\tab_p3_ancova_mar.csv
+  zapisano: results\tab_p3_ancova_mcar.csv
+  zapisano: results\tab_p3_porownanie.csv
+  zapisano: results\tab_p3_skala_delta.csv
+  zapisano: results\tab_p3_srednie_chg.csv
+  zapisano: results\tab_p3_tipping_1d.csv
+  zapisano: results\tab_p3_tipping_1d_gesta_siatka.csv
+  zapisano: results\tab_p3_tipping_2d.csv
+  zapisano: results\tab_p3_tipping_2d_krytyczne.csv
+  zapisano: figures\fig6_imputacja_diagnostyka.png
+  zapisano: figures\fig7_tipping_point_1d.png
+  zapisano: figures\fig8_tipping_point_2d.png
+  zapisano: figures\fig9_forest_beta1.png
+
+====================================================================================================
+KONIEC – podsumowanie ostrzeżeń
+====================================================================================================
+Liczba ostrzeżeń zarejestrowanych podczas analizy: 0
+Wydruk zapisano w: results\punkt3_wydruk_konsoli.txt
