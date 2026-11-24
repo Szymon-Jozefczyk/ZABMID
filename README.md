@@ -9,7 +9,7 @@ ZABMID/
 ├── data/
 │   └── ka01.csv                                       # zbiór danych grupy (N = 805)
 ├── notebooks/
-│   ├── 00_raport_koncowy_ZAB_zadanie1A.ipynb          # zintegrowany raport (Pkt 1–3 + szablony Pkt 4–5)
+│   ├── 00_raport_koncowy_ZAB_zadanie1A.ipynb          # zintegrowany raport (Pkt 1–4 + szablon Pkt 5)
 │   ├── 01_analiza_struktury.ipynb                     # PUNKT 1 – analiza struktury i braków
 │   ├── 02_analiza_mechanizmu_brakow.ipynb             # PUNKT 2 – ocena mechanizmu braków
 │   └── 03_ancova_imputacja_mnar.ipynb                 # PUNKT 3 – ANCOVA (MCAR / MAR / MNAR 1D i 2D)

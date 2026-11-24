@@ -162,7 +162,7 @@ Dep. Variable:                    chg   R-squared:                       0.183
 Model:                            OLS   Adj. R-squared:                  0.180
 Method:                 Least Squares   F-statistic:                     60.48
 Date:                Wed, 25 Nov 2026   Prob (F-statistic):           1.97e-24
-Time:                        00:13:00   Log-Likelihood:                -1200.1
+Time:                        00:42:23   Log-Likelihood:                -1200.1
 No. Observations:                 544   AIC:                             2406.
 Df Residuals:                     541   BIC:                             2419.
 Df Model:                           2                                         
