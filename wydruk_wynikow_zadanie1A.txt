@@ -2,7 +2,7 @@
 ====================================================================================================
 ZAAWANSOWANA ANALITYKA BIZNESOWA – ZADANIE NR 1 (WERSJA A)
 ====================================================================================================
-Ścieżka danych: C:\Users\pheni\OneDrive - SGH\AAMagisterka\III semestr\Zaawansowana analityka biznesowa\ZADANIE_1\ZABMID\data\ka01.csv
+Ścieżka danych: C:\Users\iwoce\OneDrive\Dokumenty\Moje pliki\Studia\Notatki SGH Big Data\Zaawansowana analityka biznesowa, metody imputacji danych\ZABMID\data\ka01.csv
 Parametry globalne: SEED = 42 | m = 100 | α = 0.05
 
 ====================================================================================================
@@ -161,8 +161,8 @@ A. SCENARIUSZ MCAR – analiza pełnych przypadków (complete-case, OLS)
 Dep. Variable:                    chg   R-squared:                       0.183
 Model:                            OLS   Adj. R-squared:                  0.180
 Method:                 Least Squares   F-statistic:                     60.48
-Date:                Tue, 24 Nov 2026   Prob (F-statistic):           1.97e-24
-Time:                        09:27:57   Log-Likelihood:                -1200.1
+Date:                Wed, 25 Nov 2026   Prob (F-statistic):           1.97e-24
+Time:                        00:13:00   Log-Likelihood:                -1200.1
 No. Observations:                 544   AIC:                             2406.
 Df Residuals:                     541   BIC:                             2419.
 Df Model:                           2                                         
@@ -239,9 +239,9 @@ LS-mean CHG – TRT=2      -1.5112  0.1316 -11.4821    326.1521   0.0000  -1.770
 
 Weryfikacja krzyżowa: IterativeImputer(BayesianRidge, sample_posterior=True), warstwy TRT, m = 100:
                      Oszacowanie      SE  df (ν_adj)  p-value  CI 2.5%  CI 97.5%     FMI
-β0 (wyraz wolny)          3.0753  1.0021    422.3331   0.0023   1.1055    5.0450  0.2629
-β1 (TRT=1 vs TRT=2)       1.9493  0.1774    461.2149   0.0000   1.6007    2.2978  0.2349
-β2 (Y_T1)                -0.4216  0.0918    409.4881   0.0000  -0.6020   -0.2413  0.2727
+β0 (wyraz wolny)          3.0862  1.1666    343.4664   0.0085   0.7917    5.3806  0.3281
+β1 (TRT=1 vs TRT=2)       1.9490  0.2067    370.9215   0.0000   1.5426    2.3554  0.3039
+β2 (Y_T1)                -0.4224  0.1071    330.0875   0.0001  -0.6331   -0.2117  0.3407
 
 ====================================================================================================
 C. WERYFIKACJA POPRAWNOŚCI
@@ -345,19 +345,19 @@ F. TABELA PORÓWNAWCZA – MCAR (CC) vs MAR (MI) vs MNAR (δ*)
 ====================================================================================================
                       MCAR (CC)  MAR (MI, FCS norm)  MAR (MI, sklearn)
 N                      544.0000            805.0000           805.0000
-Śr. CHG surowa TRT=1     0.4530              0.4587             0.4458
-Śr. CHG surowa TRT=2    -1.4898             -1.5205            -1.5245
-LS-mean CHG TRT=1        0.4603              0.4483             0.4347
-LS-mean CHG TRT=2       -1.4956             -1.5112            -1.5145
-β1                       1.9559              1.9594             1.9493
-SE(β1)                   0.1901              0.1871             0.1774
-CI 2.5%                  1.5824              1.5915             1.6007
-CI 97.5%                 2.3293              2.3273             2.2978
+Śr. CHG surowa TRT=1     0.4530              0.4587             0.4480
+Śr. CHG surowa TRT=2    -1.4898             -1.5205            -1.5220
+LS-mean CHG TRT=1        0.4603              0.4483             0.4369
+LS-mean CHG TRT=2       -1.4956             -1.5112            -1.5121
+β1                       1.9559              1.9594             1.9490
+SE(β1)                   0.1901              0.1871             0.2067
+CI 2.5%                  1.5824              1.5915             1.5426
+CI 97.5%                 2.3293              2.3273             2.3554
 p-value                  0.0000              0.0000             0.0000
-β2 (Y_T1)               -0.3898             -0.3977            -0.4216
-R²                       0.1827              0.1900             0.1915
-RIV(β1)                     NaN              0.4456             0.3013
-FMI(β1)                     NaN              0.3120             0.2349
+β2 (Y_T1)               -0.3898             -0.3977            -0.4224
+R²                       0.1827              0.1900             0.1610
+RIV(β1)                     NaN              0.4456             0.4289
+FMI(β1)                     NaN              0.3120             0.3039
 
 ====================================================================================================
 G. ZAPIS WYNIKÓW
@@ -377,9 +377,45 @@ G. ZAPIS WYNIKÓW
   zapisano: figures\fig9_forest_beta1.png
 
 ====================================================================================================
-PUNKT 4 – [MIEJSCE DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
+PUNKT 4 – PODSUMOWANIE ESTYMACJI ANCOVA W KONTEKŚCIE BRAKÓW
 ====================================================================================================
-[INFO] Sekcja Punktu 4 jest przygotowana do dopisania kodu przez pozostałych członków zespołu.
+
+4.1. Tabela porównawcza estymacji ANCOVA:
+                  MCAR (CC) MAR (MI, FCS norm)
+N                       544                805
+β0                   2.7225             2.8181
+β1 (TRT=1 vs 2)      1.9559             1.9594
+SE(β1)               0.1901             0.1871
+95% CI β1 — dolna    1.5824             1.5915
+95% CI β1 — górna    2.3293             2.3273
+p(β1)              8.60e-23           1.35e-22
+β2 (Y_T1)           -0.3898            -0.3977
+p(β2)              5.56e-05           4.38e-05
+R²                   0.1827             0.1900
+FMI(β1)                   —             31.20%
+
+4.2. Braki końcowego pomiaru: 261/805 (32.42%), w TRT=1: 138, w TRT=2: 123.
+W modelu logistycznym: p(Y_T1)=0.0067, p(TRT)=0.0364.
+To argumenty przeciw MCAR, ale nie dowód MAR; na podstawie danych obserwowanych nie można wykluczyć MNAR.
+
+4.3. Efekt TRT: β1(CC)=1.9559; β1(MI)=1.9594; różnica MI-CC=+0.0036.
+SE(CC)=0.1901, SE(MI)=0.1871; zmniejszenie SE=1.60%.
+β2(Y_T1) w MI=-0.3977, p=4.38e-05.
+FMI(β1) w MI=31.20%.
+W obu wariantach 95% CI dla β1 nie obejmuje zera; odrzucamy H0: β1=0.
+Alternatywna MI (sklearn): β1=1.9490.
+
+4.4. MNAR 1D: δ*=-4.2481 przy przesunięciu 138 imputowanych Y_T2 w TRT=1 (|δ*|/SD=2.05); na progu p≈0,05.
+MNAR 2D: punkty graniczne zależne od przesunięcia δ2 w grupie kontrolnej:
+ δ2 (TRT=2)  δ1* (TRT=1)
+       -2.0      -5.7097
+       -1.0      -4.9869
+        0.0      -4.2481
+        1.0      -3.4907
+        2.0      -2.7124
+        3.0      -1.9119
+Wniosek: dodatni efekt TRT jest stabilny w CC i MI/MAR, lecz istotność zależy od rozpatrywanego scenariusza MNAR.
+Tabela punktu 4 zapisana w: C:\Users\iwoce\OneDrive\Dokumenty\Moje pliki\Studia\Notatki SGH Big Data\Zaawansowana analityka biznesowa, metody imputacji danych\ZABMID\results\tab_p4_podsumowanie.csv
 
 ====================================================================================================
 PUNKT 5 – [MIEJSCE DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
@@ -389,5 +425,11 @@ PUNKT 5 – [MIEJSCE DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
 ====================================================================================================
 PODSUMOWANIE OSTRZEŻEŃ I ZAPIS WYDRUKU
 ====================================================================================================
-Liczba ostrzeżeń zarejestrowanych w trakcie całego skryptu: 0
-Pełny wydruk wyników zapisano w: C:\Users\pheni\OneDrive - SGH\AAMagisterka\III semestr\Zaawansowana analityka biznesowa\ZADANIE_1\ZABMID\wydruk_wynikow_zadanie1A.txt
+Liczba ostrzeżeń zarejestrowanych w trakcie całego skryptu: 6
+  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
+  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
+  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
+  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
+  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
+  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
+Pełny wydruk wyników zapisano w: C:\Users\iwoce\OneDrive\Dokumenty\Moje pliki\Studia\Notatki SGH Big Data\Zaawansowana analityka biznesowa, metody imputacji danych\ZABMID\wydruk_wynikow_zadanie1A.txt

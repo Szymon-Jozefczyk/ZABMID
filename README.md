@@ -24,13 +24,14 @@ ZABMID/
 └── README.md
 ```
 
-## Instrukcja dla pozostałych osób z zespołu (dodanie Punktów 4 i 5)
 
-Punkty **1, 2 i 3** są w pełni ukończone. Przygotowano dedykowane miejsca na dopisanie **Punktów 4 i 5**:
+## Instrukcja dla pozostałych osób z zespołu (dokończenie Punktu 5)
+
+Punkty **1, 2, 3 i 4** są ukończone. Do uzupełnienia pozostaje **Punkt 5**:
 
 1. **Raport (HTML / PDF):**
    - Otwórz `notebooks/00_raport_koncowy_ZAB_zadanie1A.ipynb`.
-   - Uzupełnij skład grupy na stronie tytułowej oraz wklej analizę, tabele, wykresy i wnioski w sekcjach **Punkt 4** oraz **Punkt 5**.
+   - Uzupełnij skład grupy na stronie tytułowej oraz wklej analizę, tabele, wykresy i wnioski w sekcji **Punkt 5**. Sekcja **Punkt 4** jest już uzupełniona.
    - Wygeneruj zaktualizowany plik HTML jednym poleceniem (z katalogu `ZABMID/`):
      ```powershell
      .\.venv\Scripts\python.exe -m jupyter nbconvert --to html --execute --output-dir . --output raport_ZAB_zadanie1A notebooks\00_raport_koncowy_ZAB_zadanie1A.ipynb
@@ -38,7 +39,7 @@ Punkty **1, 2 i 3** są w pełni ukończone. Przygotowano dedykowane miejsca na 
      *(Opcjonalnie: otwórz `raport_ZAB_zadanie1A.html` w przeglądarce i zapisz jako PDF).*
 
 2. **Kod programu i wydruk wyników:**
-   - W pliku `kod_zadanie1A.py` uzupełnij funkcje `uruchom_punkt4(df_raw)` oraz `uruchom_punkt5(df_raw)` w miejscach oznaczonych `# TODO (ZESPÓŁ – PUNKT 4/5)`.
+   - W pliku `kod_zadanie1A.py` funkcja `uruchom_punkt4(df_raw)` jest już zaimplementowana i korzysta z wyników Punktu 3 (bez powtarzania imputacji). Uzupełnij jedynie `uruchom_punkt5(df_raw)` w miejscu oznaczonym `# TODO (ZESPÓŁ – PUNKT 5)`.
    - Uruchom skrypt (z katalogu `ZABMID/`), co automatycznie zaktualizuje `wydruk_wynikow_zadanie1A.txt`:
      ```powershell
      .\.venv\Scripts\python.exe kod_zadanie1A.py

@@ -8,7 +8,7 @@ Główny, w pełni odtwarzalny skrypt uruchamiający analizy dla całego zadania
   - PUNKT 1: Analiza struktury danych oraz zakresu i rozkładu braków (wykresy fig1–fig5)
   - PUNKT 2: Ocena zależności występowania braków od cech (Welch t, chi2, regresja logistyczna)
   - PUNKT 3: Model ANCOVA (MCAR / MAR / MNAR 1D i 2D tipping-point; wykresy fig6–fig9)
-  - PUNKT 4: [Miejsce przygotowane do uzupełnienia przez zespół]
+  - PUNKT 4: Porównanie i interpretacja wyników estymacji ANCOVA w kontekście braków
   - PUNKT 5: [Miejsce przygotowane do uzupełnienia przez zespół]
 
 Uruchomienie:
@@ -329,15 +329,107 @@ def uruchom_punkt3() -> dict:
 
 
 # =============================================================================
-# PUNKT 4 – [MIEJSCE NA ROZWIĄZANIE PUNKTU 4 – DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
+# PUNKT 4 – Podsumowanie wyników estymacji ANCOVA w kontekście braków danych
 # =============================================================================
 def uruchom_punkt4(df_raw: pd.DataFrame) -> None:
-    _naglowek("PUNKT 4 – [MIEJSCE DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]")
-    # TODO (ZESPÓŁ – PUNKT 4):
-    # Wklej tutaj kod realizujący wymagania Punktu 4 zadania
-    # (korzystaj z parametrów df_raw, CSV_FILE, FIG, RES, SEED, ALPHA).
-    print("[INFO] Sekcja Punktu 4 jest przygotowana do dopisania kodu przez pozostałych członków zespołu.")
+    """Podsumowanie wyników CC, MI/MAR i MNAR z punktu 3 (bez ponownej imputacji)."""
+    _naglowek("PUNKT 4 – PODSUMOWANIE ESTYMACJI ANCOVA W KONTEKŚCIE BRAKÓW")
 
+    por = pd.read_csv(RES / "tab_p3_porownanie.csv", index_col=0, encoding="utf-8-sig")
+    mcar = pd.read_csv(RES / "tab_p3_ancova_mcar.csv", index_col=0, encoding="utf-8-sig")
+    mar = pd.read_csv(RES / "tab_p3_ancova_mar.csv", index_col=0, encoding="utf-8-sig")
+    skala = pd.read_csv(RES / "tab_p3_skala_delta.csv", index_col=0, encoding="utf-8-sig")
+    kryt2d = pd.read_csv(RES / "tab_p3_tipping_2d_krytyczne.csv", encoding="utf-8-sig")
+
+    tabela = pd.DataFrame({
+        "MCAR (CC)": {
+            "N": por.loc["N", "MCAR (CC)"],
+            "β0": mcar.loc["β0 (wyraz wolny)", "Oszacowanie"],
+            "β1 (TRT=1 vs 2)": por.loc["β1", "MCAR (CC)"],
+            "SE(β1)": por.loc["SE(β1)", "MCAR (CC)"],
+            "95% CI β1 — dolna": por.loc["CI 2.5%", "MCAR (CC)"],
+            "95% CI β1 — górna": por.loc["CI 97.5%", "MCAR (CC)"],
+            "p(β1)": por.loc["p-value", "MCAR (CC)"],
+            "β2 (Y_T1)": por.loc["β2 (Y_T1)", "MCAR (CC)"],
+            "p(β2)": mcar.loc["β2 (Y_T1)", "p-value"],
+            "R²": por.loc["R²", "MCAR (CC)"],
+            "FMI(β1)": np.nan,
+        },
+        "MAR (MI, FCS norm)": {
+            "N": por.loc["N", "MAR (MI, FCS norm)"],
+            "β0": mar.loc["β0 (wyraz wolny)", "Oszacowanie"],
+            "β1 (TRT=1 vs 2)": por.loc["β1", "MAR (MI, FCS norm)"],
+            "SE(β1)": por.loc["SE(β1)", "MAR (MI, FCS norm)"],
+            "95% CI β1 — dolna": por.loc["CI 2.5%", "MAR (MI, FCS norm)"],
+            "95% CI β1 — górna": por.loc["CI 97.5%", "MAR (MI, FCS norm)"],
+            "p(β1)": por.loc["p-value", "MAR (MI, FCS norm)"],
+            "β2 (Y_T1)": por.loc["β2 (Y_T1)", "MAR (MI, FCS norm)"],
+            "p(β2)": mar.loc["β2 (Y_T1)", "p-value"],
+            "R²": por.loc["R²", "MAR (MI, FCS norm)"],
+            "FMI(β1)": por.loc["FMI(β1)", "MAR (MI, FCS norm)"],
+        },
+    })
+    tabela.to_csv(RES / "tab_p4_podsumowanie.csv", encoding="utf-8-sig", index_label="Miara")
+
+    def format_wartosc(wiersz: str, wartosc: float) -> str:
+        if pd.isna(wartosc):
+            return "—"
+        if wiersz == "N":
+            return f"{wartosc:.0f}"
+        if wiersz.startswith("p("):
+            return f"{wartosc:.2e}"
+        if wiersz == "FMI(β1)":
+            return f"{wartosc:.2%}"
+        return f"{wartosc:.4f}"
+
+    print("\n4.1. Tabela porównawcza estymacji ANCOVA:")
+    do_wydruku = tabela.copy().astype(object)
+    for w in tabela.index:
+        for k in tabela.columns:
+            do_wydruku.loc[w, k] = format_wartosc(w, tabela.loc[w, k])
+    print(do_wydruku.to_string())
+
+    # Także wartości p z punktu 2 są wyznaczane na aktualnych danych, nie wpisywane ręcznie.
+    dane_logit = df_raw.copy()
+    dane_logit["R_y_t2"] = dane_logit["y_t2"].isna().astype(int)
+    logit = smf.logit("R_y_t2 ~ y_t1 + x1 + C(trt) + C(x2)", data=dane_logit).fit(
+        disp=False, cov_type="HC3"
+    )
+    p_y1 = float(logit.pvalues["y_t1"])
+    p_trt = float(logit.pvalues["C(trt)[T.2]"])
+    n = len(df_raw)
+    braki = int(df_raw["y_t2"].isna().sum())
+    braki_t1 = int(df_raw.loc[df_raw["trt"] == 1, "y_t2"].isna().sum())
+    braki_t2 = int(df_raw.loc[df_raw["trt"] == 2, "y_t2"].isna().sum())
+    print(f"\n4.2. Braki końcowego pomiaru: {braki}/{n} ({100 * braki/n:.2f}%), "
+          f"w TRT=1: {braki_t1}, w TRT=2: {braki_t2}.")
+    print(f"W modelu logistycznym: p(Y_T1)={p_y1:.4f}, p(TRT)={p_trt:.4f}.")
+    print("To argumenty przeciw MCAR, ale nie dowód MAR; na podstawie danych "
+          "obserwowanych nie można wykluczyć MNAR.")
+
+    b_cc = float(tabela.loc["β1 (TRT=1 vs 2)", "MCAR (CC)"])
+    b_mi = float(tabela.loc["β1 (TRT=1 vs 2)", "MAR (MI, FCS norm)"])
+    se_cc = float(tabela.loc["SE(β1)", "MCAR (CC)"])
+    se_mi = float(tabela.loc["SE(β1)", "MAR (MI, FCS norm)"])
+    print(f"\n4.3. Efekt TRT: β1(CC)={b_cc:.4f}; β1(MI)={b_mi:.4f}; "
+          f"różnica MI-CC={b_mi - b_cc:+.4f}.")
+    print(f"SE(CC)={se_cc:.4f}, SE(MI)={se_mi:.4f}; "
+          f"zmniejszenie SE={(1 - se_mi/se_cc)*100:.2f}%.")
+    print(f"β2(Y_T1) w MI={tabela.loc['β2 (Y_T1)', 'MAR (MI, FCS norm)']:.4f}, "
+          f"p={tabela.loc['p(β2)', 'MAR (MI, FCS norm)']:.2e}.")
+    print(f"FMI(β1) w MI={tabela.loc['FMI(β1)', 'MAR (MI, FCS norm)']:.2%}.")
+    print("W obu wariantach 95% CI dla β1 nie obejmuje zera; odrzucamy H0: β1=0.")
+    print(f"Alternatywna MI (sklearn): β1={por.loc['β1', 'MAR (MI, sklearn)']:.4f}.")
+
+    delta_star = float(skala.loc["δ*", "wartość"])
+    skala_sd = abs(float(skala.loc["δ* / SD(Y_T2 | TRT=1)", "wartość"]))
+    print(f"\n4.4. MNAR 1D: δ*={delta_star:.4f} przy przesunięciu {braki_t1} "
+          f"imputowanych Y_T2 w TRT=1 (|δ*|/SD={skala_sd:.2f}); na progu p≈0,05.")
+    print("MNAR 2D: punkty graniczne zależne od przesunięcia δ2 w grupie kontrolnej:")
+    print(kryt2d.round(4).to_string(index=False))
+    print("Wniosek: dodatni efekt TRT jest stabilny w CC i MI/MAR, lecz istotność "
+          "zależy od rozpatrywanego scenariusza MNAR.")
+    print(f"Tabela punktu 4 zapisana w: {RES / 'tab_p4_podsumowanie.csv'}")
 
 # =============================================================================
 # PUNKT 5 – [MIEJSCE NA ROZWIĄZANIE PUNKTU 5 – DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
