@@ -2,7 +2,7 @@
 ====================================================================================================
 ZAAWANSOWANA ANALITYKA BIZNESOWA – ZADANIE NR 1 (WERSJA A)
 ====================================================================================================
-Ścieżka danych: C:\Users\iwoce\OneDrive\Dokumenty\Moje pliki\Studia\Notatki SGH Big Data\Zaawansowana analityka biznesowa, metody imputacji danych\ZABMID\data\ka01.csv
+Ścieżka danych: /Users/milosz/Downloads/ZABMID-main/data/ka01.csv
 Parametry globalne: SEED = 42 | m = 100 | α = 0.05
 
 ====================================================================================================
@@ -133,7 +133,7 @@ Test ilorazu wiarygodności (LR): stat = 12.4927, df = 4, p-value = 0.0140, Pseu
 ====================================================================================================
 PUNKT 3 – ANCOVA przy założeniach MCAR / MAR oraz analiza wrażliwości MNAR
 ====================================================================================================
-Plik danych: data\ka01.csv   |   SEED = 42   |   m = 100   |   α = 0.05
+Plik danych: data/ka01.csv   |   SEED = 42   |   m = 100   |   α = 0.05
 Wymiary zbioru: 805 obserwacji; zmienne: y_t1, x1, trt, x2, y_t2
 
 Braki danych (zgodnie z pkt 1 – wyłącznie Y_T2):
@@ -161,8 +161,8 @@ A. SCENARIUSZ MCAR – analiza pełnych przypadków (complete-case, OLS)
 Dep. Variable:                    chg   R-squared:                       0.183
 Model:                            OLS   Adj. R-squared:                  0.180
 Method:                 Least Squares   F-statistic:                     60.48
-Date:                Wed, 25 Nov 2026   Prob (F-statistic):           1.97e-24
-Time:                        00:42:23   Log-Likelihood:                -1200.1
+Date:                Fri, 27 Nov 2026   Prob (F-statistic):           1.97e-24
+Time:                        19:40:54   Log-Likelihood:                -1200.1
 No. Observations:                 544   AIC:                             2406.
 Df Residuals:                     541   BIC:                             2419.
 Df Model:                           2                                         
@@ -239,9 +239,9 @@ LS-mean CHG – TRT=2      -1.5112  0.1316 -11.4821    326.1521   0.0000  -1.770
 
 Weryfikacja krzyżowa: IterativeImputer(BayesianRidge, sample_posterior=True), warstwy TRT, m = 100:
                      Oszacowanie      SE  df (ν_adj)  p-value  CI 2.5%  CI 97.5%     FMI
-β0 (wyraz wolny)          3.0862  1.1666    343.4664   0.0085   0.7917    5.3806  0.3281
-β1 (TRT=1 vs TRT=2)       1.9490  0.2067    370.9215   0.0000   1.5426    2.3554  0.3039
-β2 (Y_T1)                -0.4224  0.1071    330.0875   0.0001  -0.6331   -0.2117  0.3407
+β0 (wyraz wolny)          3.0753  1.0021    422.3331   0.0023   1.1055    5.0450  0.2629
+β1 (TRT=1 vs TRT=2)       1.9493  0.1774    461.2149   0.0000   1.6007    2.2978  0.2349
+β2 (Y_T1)                -0.4216  0.0918    409.4881   0.0000  -0.6020   -0.2413  0.2727
 
 ====================================================================================================
 C. WERYFIKACJA POPRAWNOŚCI
@@ -345,36 +345,36 @@ F. TABELA PORÓWNAWCZA – MCAR (CC) vs MAR (MI) vs MNAR (δ*)
 ====================================================================================================
                       MCAR (CC)  MAR (MI, FCS norm)  MAR (MI, sklearn)
 N                      544.0000            805.0000           805.0000
-Śr. CHG surowa TRT=1     0.4530              0.4587             0.4480
-Śr. CHG surowa TRT=2    -1.4898             -1.5205            -1.5220
-LS-mean CHG TRT=1        0.4603              0.4483             0.4369
-LS-mean CHG TRT=2       -1.4956             -1.5112            -1.5121
-β1                       1.9559              1.9594             1.9490
-SE(β1)                   0.1901              0.1871             0.2067
-CI 2.5%                  1.5824              1.5915             1.5426
-CI 97.5%                 2.3293              2.3273             2.3554
+Śr. CHG surowa TRT=1     0.4530              0.4587             0.4458
+Śr. CHG surowa TRT=2    -1.4898             -1.5205            -1.5245
+LS-mean CHG TRT=1        0.4603              0.4483             0.4347
+LS-mean CHG TRT=2       -1.4956             -1.5112            -1.5145
+β1                       1.9559              1.9594             1.9493
+SE(β1)                   0.1901              0.1871             0.1774
+CI 2.5%                  1.5824              1.5915             1.6007
+CI 97.5%                 2.3293              2.3273             2.2978
 p-value                  0.0000              0.0000             0.0000
-β2 (Y_T1)               -0.3898             -0.3977            -0.4224
-R²                       0.1827              0.1900             0.1610
-RIV(β1)                     NaN              0.4456             0.4289
-FMI(β1)                     NaN              0.3120             0.3039
+β2 (Y_T1)               -0.3898             -0.3977            -0.4216
+R²                       0.1827              0.1900             0.1915
+RIV(β1)                     NaN              0.4456             0.3013
+FMI(β1)                     NaN              0.3120             0.2349
 
 ====================================================================================================
 G. ZAPIS WYNIKÓW
 ====================================================================================================
-  zapisano: results\tab_p3_ancova_mar.csv
-  zapisano: results\tab_p3_ancova_mcar.csv
-  zapisano: results\tab_p3_porownanie.csv
-  zapisano: results\tab_p3_skala_delta.csv
-  zapisano: results\tab_p3_srednie_chg.csv
-  zapisano: results\tab_p3_tipping_1d.csv
-  zapisano: results\tab_p3_tipping_1d_gesta_siatka.csv
-  zapisano: results\tab_p3_tipping_2d.csv
-  zapisano: results\tab_p3_tipping_2d_krytyczne.csv
-  zapisano: figures\fig6_imputacja_diagnostyka.png
-  zapisano: figures\fig7_tipping_point_1d.png
-  zapisano: figures\fig8_tipping_point_2d.png
-  zapisano: figures\fig9_forest_beta1.png
+  zapisano: results/tab_p3_ancova_mar.csv
+  zapisano: results/tab_p3_ancova_mcar.csv
+  zapisano: results/tab_p3_porownanie.csv
+  zapisano: results/tab_p3_skala_delta.csv
+  zapisano: results/tab_p3_srednie_chg.csv
+  zapisano: results/tab_p3_tipping_1d.csv
+  zapisano: results/tab_p3_tipping_1d_gesta_siatka.csv
+  zapisano: results/tab_p3_tipping_2d.csv
+  zapisano: results/tab_p3_tipping_2d_krytyczne.csv
+  zapisano: figures/fig6_imputacja_diagnostyka.png
+  zapisano: figures/fig7_tipping_point_1d.png
+  zapisano: figures/fig8_tipping_point_2d.png
+  zapisano: figures/fig9_forest_beta1.png
 
 ====================================================================================================
 PUNKT 4 – PODSUMOWANIE ESTYMACJI ANCOVA W KONTEKŚCIE BRAKÓW
@@ -403,7 +403,7 @@ SE(CC)=0.1901, SE(MI)=0.1871; zmniejszenie SE=1.60%.
 β2(Y_T1) w MI=-0.3977, p=4.38e-05.
 FMI(β1) w MI=31.20%.
 W obu wariantach 95% CI dla β1 nie obejmuje zera; odrzucamy H0: β1=0.
-Alternatywna MI (sklearn): β1=1.9490.
+Alternatywna MI (sklearn): β1=1.9493.
 
 4.4. MNAR 1D: δ*=-4.2481 przy przesunięciu 138 imputowanych Y_T2 w TRT=1 (|δ*|/SD=2.05); na progu p≈0,05.
 MNAR 2D: punkty graniczne zależne od przesunięcia δ2 w grupie kontrolnej:
@@ -415,21 +415,31 @@ MNAR 2D: punkty graniczne zależne od przesunięcia δ2 w grupie kontrolnej:
         2.0      -2.7124
         3.0      -1.9119
 Wniosek: dodatni efekt TRT jest stabilny w CC i MI/MAR, lecz istotność zależy od rozpatrywanego scenariusza MNAR.
-Tabela punktu 4 zapisana w: C:\Users\iwoce\OneDrive\Dokumenty\Moje pliki\Studia\Notatki SGH Big Data\Zaawansowana analityka biznesowa, metody imputacji danych\ZABMID\results\tab_p4_podsumowanie.csv
+Tabela punktu 4 zapisana w: /Users/milosz/Downloads/ZABMID-main/results/tab_p4_podsumowanie.csv
 
 ====================================================================================================
-PUNKT 5 – [MIEJSCE DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
+PUNKT 5 – MIARA DIAGNOSTYCZNA OCENY IMPUTACJI W KONTEKŚCIE MODELU ANCOVA
 ====================================================================================================
-[INFO] Sekcja Punktu 5 jest przygotowana do dopisania kodu przez pozostałych członków zespołu.
+
+5.1. Diagnostyka parametrów modelu ANCOVA wg reguł Rubina (m = 100, SEED = 42):
+        Parametr  Oszacowanie (Q̄)  SE całkowite (√T)  Ū (wewn.)  B (między.)  RIV (r)  FMI (λ)     RE  p-value
+β0 (wyraz wolny)            2.7462             0.9968      0.7465       0.2447   0.3310   0.2521 0.9975   0.0061
+ β1 (TRT=1 vs 2)            1.9210             0.1805      0.0243       0.0082   0.3420   0.2583 0.9974   0.0000
+       β2 (Y_T1)           -0.3909             0.0915      0.0062       0.0022   0.3556   0.2658 0.9973   0.0000
+
+5.2. Zgodność rozkładów wartości imputowanych vs obserwowanych:
+  Średnia statystyka Kołmogorowa-Smirnowa D_KS (y_t2): 0.0767
+  Średnia statystyka Kołmogorowa-Smirnowa D_KS (chg):  0.0586
+  Średni dystans Wassersteina W1 (y_t2):               0.3186
+  Średni dystans Wassersteina W1 (chg):                0.2421
+
+5.3. Porównanie FMI(β1): FCS norm (Punkt 3) = 31.20% | BayesianRidge MI = 25.83%
+
+Zapisano tabelę: /Users/milosz/Downloads/ZABMID-main/results/tab_p5_diagnostyka.csv
+Zapisano wykres: /Users/milosz/Downloads/ZABMID-main/figures/fig10_diagnostyka_imputacji.png (300 dpi)
 
 ====================================================================================================
 PODSUMOWANIE OSTRZEŻEŃ I ZAPIS WYDRUKU
 ====================================================================================================
-Liczba ostrzeżeń zarejestrowanych w trakcie całego skryptu: 6
-  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
-  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
-  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
-  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
-  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
-  PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead. (categorical.py:700)
-Pełny wydruk wyników zapisano w: C:\Users\iwoce\OneDrive\Dokumenty\Moje pliki\Studia\Notatki SGH Big Data\Zaawansowana analityka biznesowa, metody imputacji danych\ZABMID\wydruk_wynikow_zadanie1A.txt
+Liczba ostrzeżeń zarejestrowanych w trakcie całego skryptu: 0
+Pełny wydruk wyników zapisano w: /Users/milosz/Downloads/ZABMID-main/wydruk_wynikow_zadanie1A.txt

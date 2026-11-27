@@ -434,12 +434,141 @@ def uruchom_punkt4(df_raw: pd.DataFrame) -> None:
 # =============================================================================
 # PUNKT 5 – [MIEJSCE NA ROZWIĄZANIE PUNKTU 5 – DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]
 # =============================================================================
+
 def uruchom_punkt5(df_raw: pd.DataFrame) -> None:
-    _naglowek("PUNKT 5 – [MIEJSCE DO UZUPEŁNIENIA PRZEZ ZESPÓŁ]")
-    # TODO (ZESPÓŁ – PUNKT 5):
-    # Wklej tutaj kod realizujący wymagania Punktu 5 zadania
-    # oraz ewentualne końcowe zestawienia porównawcze.
-    print("[INFO] Sekcja Punktu 5 jest przygotowana do dopisania kodu przez pozostałych członków zespołu.")
+    """Diagnostyka wielokrotnej imputacji (FMI, RIV, RE z reguł Rubina oraz D_KS)."""
+    from sklearn.experimental import enable_iterative_imputer  # noqa: F401
+    from sklearn.impute import IterativeImputer
+    from sklearn.linear_model import BayesianRidge
+
+    _naglowek("PUNKT 5 – MIARA DIAGNOSTYCZNA OCENY IMPUTACJI W KONTEKŚCIE MODELU ANCOVA")
+
+    features = ["y_t1", "x1", "trt1", "x2", "y_t2"]
+    df = df_raw[["y_t1", "x1", "trt", "x2", "y_t2"]].copy()
+    df["trt1"] = (df["trt"] == 1).astype(int)
+    obs_mask = df["y_t2"].notna()
+
+    obs_y2 = df.loc[obs_mask, "y_t2"].to_numpy()
+    obs_chg = (df.loc[obs_mask, "y_t2"] - df.loc[obs_mask, "y_t1"]).to_numpy()
+
+    param_names = ["Intercept", "trt1", "y_t1"]
+    labels = ["β0 (wyraz wolny)", "β1 (TRT=1 vs 2)", "β2 (Y_T1)"]
+
+    q_list, u_list = [], []
+    ks_y2_list, ks_chg_list, wass_y2_list, wass_chg_list = [], [], [], []
+    imp_chg_samples = []
+
+    for m in range(M_IMP):
+        imp = IterativeImputer(
+            estimator=BayesianRidge(),
+            sample_posterior=True,
+            random_state=SEED + m,
+            max_iter=20,
+        )
+        df_imp = pd.DataFrame(imp.fit_transform(df[features]), columns=features)
+        df_imp["trt1"] = (df_imp["trt1"] >= 0.5).astype(int)
+        df_imp["chg"] = df_imp["y_t2"] - df_imp["y_t1"]
+
+        mod = smf.ols("chg ~ trt1 + y_t1", data=df_imp).fit()
+        q_list.append(mod.params[param_names].to_numpy())
+        u_list.append((mod.bse[param_names].to_numpy()) ** 2)
+
+        imp_y2 = df_imp.loc[~obs_mask, "y_t2"].to_numpy()
+        imp_chg = df_imp.loc[~obs_mask, "chg"].to_numpy()
+        ks_y2_list.append(stats.ks_2samp(obs_y2, imp_y2).statistic)
+        ks_chg_list.append(stats.ks_2samp(obs_chg, imp_chg).statistic)
+        wass_y2_list.append(stats.wasserstein_distance(obs_y2, imp_y2))
+        wass_chg_list.append(stats.wasserstein_distance(obs_chg, imp_chg))
+        if m < 15:
+            imp_chg_samples.append(imp_chg)
+
+    q_arr = np.array(q_list)
+    u_arr = np.array(u_list)
+    n_obs = len(df)
+    nu_com = n_obs - len(param_names)
+
+    rows = []
+    for idx, label in enumerate(labels):
+        q_bar = float(np.mean(q_arr[:, idx]))
+        u_bar = float(np.mean(u_arr[:, idx]))
+        b_var = float(np.var(q_arr[:, idx], ddof=1))
+        t_var = u_bar + (1.0 + 1.0 / M_IMP) * b_var
+        se_tot = float(np.sqrt(t_var))
+        riv = ((1.0 + 1.0 / M_IMP) * b_var) / u_bar
+
+        nu_old = (M_IMP - 1) * (1.0 + 1.0 / riv) ** 2
+        gamma_m = ((1.0 + 1.0 / M_IMP) * b_var) / t_var
+        nu_obs = ((nu_com + 1.0) / (nu_com + 3.0)) * nu_com * (1.0 - gamma_m)
+        nu_adj = (nu_old * nu_obs) / (nu_old + nu_obs)
+
+        fmi = (riv + 2.0 / (nu_adj + 3.0)) / (riv + 1.0)
+        re = 1.0 / (1.0 + fmi / M_IMP)
+        p_val = float(2.0 * stats.t.sf(abs(q_bar / se_tot), df=nu_adj))
+
+        rows.append({
+            "Parametr": label,
+            "Oszacowanie (Q̄)": q_bar,
+            "SE całkowite (√T)": se_tot,
+            "Ū (wewn.)": u_bar,
+            "B (między.)": b_var,
+            "RIV (r)": riv,
+            "FMI (λ)": fmi,
+            "RE": re,
+            "p-value": p_val,
+        })
+
+    diag_df = pd.DataFrame(rows)
+    diag_df.to_csv(RES / "tab_p5_diagnostyka.csv", index=False, encoding="utf-8-sig")
+
+    print(f"\n5.1. Diagnostyka parametrów modelu ANCOVA wg reguł Rubina (m = {M_IMP}, SEED = {SEED}):")
+    print(diag_df.round(4).to_string(index=False))
+
+    print("\n5.2. Zgodność rozkładów wartości imputowanych vs obserwowanych:")
+    print(f"  Średnia statystyka Kołmogorowa-Smirnowa D_KS (y_t2): {np.mean(ks_y2_list):.4f}")
+    print(f"  Średnia statystyka Kołmogorowa-Smirnowa D_KS (chg):  {np.mean(ks_chg_list):.4f}")
+    print(f"  Średni dystans Wassersteina W1 (y_t2):               {np.mean(wass_y2_list):.4f}")
+    print(f"  Średni dystans Wassersteina W1 (chg):                {np.mean(wass_chg_list):.4f}")
+
+    por_path = RES / "tab_p3_porownanie.csv"
+    if por_path.exists():
+        por = pd.read_csv(por_path, index_col=0, encoding="utf-8-sig")
+        if "FMI(β1)" in por.index and "MAR (MI, FCS norm)" in por.columns:
+            fmi_fcs = float(por.loc["FMI(β1)", "MAR (MI, FCS norm)"])
+            fmi_br = float(diag_df.loc[diag_df["Parametr"] == "β1 (TRT=1 vs 2)", "FMI (λ)"].iloc[0])
+            print(f"\n5.3. Porównanie FMI(β1): FCS norm (Punkt 3) = {fmi_fcs:.2%} | BayesianRidge MI = {fmi_br:.2%}")
+
+    # Wykres diagnostyczny fig10 (300 dpi)
+    FIG.mkdir(exist_ok=True)
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5.5))
+
+    sns.kdeplot(obs_chg, ax=ax[0], color="#2a6f97", lw=2.5, label=f"Obserwowane CHG (n={obs_mask.sum()})")
+    for i, s_chg in enumerate(imp_chg_samples):
+        sns.kdeplot(
+            s_chg, ax=ax[0], color="#c1121f", alpha=0.22, lw=1.0,
+            label=f"Imputowane CHG (pierwsze 15 z m={M_IMP})" if i == 0 else None,
+        )
+    ax[0].axvline(0, ls=":", c="gray")
+    ax[0].set_title(f"Zgodność rozkładów przyrostu CHG (śr. D_KS = {np.mean(ks_chg_list):.4f})")
+    ax[0].set_xlabel("CHG = Y_T2 − Y_T1")
+    ax[0].set_ylabel("Gęstość")
+    ax[0].legend(fontsize=9)
+
+    q1_bar = float(diag_df.loc[1, "Oszacowanie (Q̄)"])
+    fmi_b1 = float(diag_df.loc[1, "FMI (λ)"])
+    sns.histplot(q_arr[:, 1], kde=True, ax=ax[1], color="#2a6f97", alpha=0.45, bins=18)
+    ax[1].axvline(q1_bar, color="#c1121f", lw=2, ls="--", label=f"Q̄(β1) = {q1_bar:.4f}")
+    ax[1].set_title(f"Zmienność międzyimputacyjna β1 (m={M_IMP}, FMI = {fmi_b1:.2%})")
+    ax[1].set_xlabel("Oszacowanie β1 (TRT=1 vs TRT=2)")
+    ax[1].set_ylabel("Liczba imputacji")
+    ax[1].legend(fontsize=9)
+
+    plt.tight_layout()
+    fig.savefig(FIG / "fig10_diagnostyka_imputacji.png", dpi=DPI, bbox_inches="tight")
+    plt.close(fig)
+
+    print(f"\nZapisano tabelę: {RES / 'tab_p5_diagnostyka.csv'}")
+    print(f"Zapisano wykres: {FIG / 'fig10_diagnostyka_imputacji.png'} ({DPI} dpi)")
+    
 
 
 def main() -> None:
